@@ -146,7 +146,7 @@ function App() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `SuperBrix_Resultados_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `Bootcamp_Digital_Factory_Resultados_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
     setMostrarExportar(false);
@@ -190,15 +190,20 @@ function App() {
   // ============ RENDER ============
 
   const renderHeader = () => (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#061224]/90 border-b border-[#00B4D8]/20">
+    <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#061224]/95 border-b border-[#00B4D8]/20">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B1A] to-[#00B4D8] rounded-lg flex items-center justify-center text-lg font-black text-[#061224]">
-            SB
+          <div className="w-10 h-10 bg-[#FF6B1A] rounded-lg flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 4H10V10H4V4Z" fill="#061224"/>
+              <path d="M14 4H20V10H14V4Z" fill="#061224"/>
+              <path d="M4 14H10V20H4V14Z" fill="#061224"/>
+              <path d="M14 14H20V20H14V14Z" fill="#061224"/>
+            </svg>
           </div>
           <div className="hidden sm:block">
-            <h1 className="text-sm font-bold text-white tracking-tight">SuperBrix</h1>
-            <p className="text-[10px] text-[#6b7c93] uppercase tracking-wider">Reto IA 2026</p>
+            <h1 className="text-sm font-bold text-white tracking-tight">Bootcamp Digital Factory</h1>
+            <p className="text-[10px] text-[#6b7c93] uppercase tracking-wider">IA & Transformación 4.0</p>
           </div>
         </div>
         <nav className="flex gap-1">
@@ -213,7 +218,7 @@ function App() {
               onClick={() => setVista(item.id)}
               className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                 vista === item.id
-                  ? 'bg-gradient-to-r from-[#FF6B1A] to-[#00B4D8] text-[#061224]'
+                  ? 'bg-[#FF6B1A] text-[#061224]'
                   : 'text-[#b8c5d6] hover:text-white hover:bg-white/5'
               }`}
             >
@@ -239,7 +244,7 @@ function App() {
             </span>
             <h2 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
               Reto de Diseño<br />
-              <span className="bg-gradient-to-r from-[#00B4D8] to-[#FF6B1A] bg-clip-text text-transparent">& Desarrollo</span>
+              <span className="text-[#FF6B1A]">& Desarrollo</span>
             </h2>
             <p className="text-lg text-[#b8c5d6] max-w-2xl mb-8">
               Sistema móvil para reportar tiempos y novedades operativas con IA para SuperBrix.
@@ -285,7 +290,7 @@ function App() {
                 <button
                   onClick={() => setEditandoJurados(!editandoJurados)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                    editandoJurados ? 'bg-gradient-to-r from-[#FF6B1A] to-[#00B4D8] text-[#061224]' : 'bg-white/5 text-[#b8c5d6] hover:bg-white/10 border border-[#00B4D8]/20'
+                    editandoJurados ? 'bg-[#FF6B1A] text-[#061224]' : 'bg-white/5 text-[#b8c5d6] hover:bg-white/10 border border-[#00B4D8]/20'
                   }`}
                 >
                   {editandoJurados ? '✓ Listo' : '✏️ Editar'}
@@ -343,7 +348,7 @@ function App() {
 
           {/* Info storage */}
           <div className="card-dark p-4 flex items-center gap-3 border-[#00B4D8]/30">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00B4D8]/20 to-[#0052CC]/20 flex items-center justify-center text-[#00B4D8] text-sm">💾</div>
+            <div className="w-8 h-8 rounded-lg bg-[#00B4D8]/15 flex items-center justify-center text-[#00B4D8] text-sm">💾</div>
             <div>
               <p className="text-xs font-semibold text-white">Datos almacenados localmente</p>
               <p className="text-[10px] text-[#6b7c93]">Las calificaciones persisten en su navegador. Exporte resultados cuando lo necesite.</p>
@@ -360,7 +365,7 @@ function App() {
       <div className="max-w-5xl mx-auto px-4 py-12 relative z-10">
         <span className="badge-pill-neon mb-4 inline-block"><span>◈</span> Contexto del Reto</span>
         <h2 className="text-3xl md:text-4xl font-black text-white mb-2">
-          El Desafío<br /><span className="bg-gradient-to-r from-[#00B4D8] to-[#FF6B1A] bg-clip-text text-transparent">Industrial</span>
+          El Desafío<br /><span className="text-[#FF6B1A]">Industrial</span>
         </h2>
         <p className="text-[#b8c5d6] mb-8 max-w-2xl">Transformación digital para la gestión del tiempo en órdenes de producción.</p>
 
@@ -458,7 +463,7 @@ function App() {
       <div className="max-w-5xl mx-auto px-4 py-12 relative z-10">
         {mensajeExito && (
           <div className="mb-6 card-dark p-4 flex items-center gap-3 border-[#00B4D8]/40 animate-glow">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF6B1A]/20 to-[#00B4D8]/20 flex items-center justify-center text-[#FF6B1A]">✓</div>
+            <div className="w-8 h-8 rounded-lg bg-[#FF6B1A]/15 flex items-center justify-center text-[#FF6B1A]">✓</div>
             <p className="text-sm font-medium text-[#FF6B1A]">{mensajeExito}</p>
           </div>
         )}
@@ -501,7 +506,7 @@ function App() {
               </div>
               <button onClick={() => setEditandoEquipos(!editandoEquipos)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                  editandoEquipos ? 'bg-gradient-to-r from-[#FF6B1A] to-[#00B4D8] text-[#061224]' : 'bg-white/5 text-[#b8c5d6] hover:bg-white/10 border border-[#00B4D8]/20'
+                  editandoEquipos ? 'bg-[#FF6B1A] text-[#061224]' : 'bg-white/5 text-[#b8c5d6] hover:bg-white/10 border border-[#00B4D8]/20'
                 }`}>
                 {editandoEquipos ? '✓ Listo' : '✏️ Editar equipos'}
               </button>
@@ -549,7 +554,7 @@ function App() {
 
             <div className="card-dark p-5 mb-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#00B4D8]/20 to-[#0052CC]/20 flex items-center justify-center text-xl">
+                <div className="w-10 h-10 rounded-lg bg-[#00B4D8]/15 flex items-center justify-center text-xl">
                   {listaJurados.find(j => j.id === juradoActivo)?.avatar}
                 </div>
                 <div>
@@ -744,13 +749,13 @@ function App() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {ranking.slice(0, 3).map((eq, idx) => (
                   <div key={eq.id} className={`p-5 rounded-xl text-center ${
-                    idx === 0 ? 'bg-gradient-to-br from-[#FF6B1A]/10 to-[#00B4D8]/10 border border-[#FF6B1A]/30' :
+                    idx === 0 ? 'bg-[#FF6B1A]/10 border border-[#FF6B1A]/30' :
                     idx === 1 ? 'bg-white/5 border border-white/10' :
                     'bg-white/[0.02] border border-white/5'
                   }`}>
                     <div className="text-3xl mb-2">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}</div>
                     <h4 className="font-bold text-white">{eq.nombre}</h4>
-                    <p className="text-2xl font-black bg-gradient-to-r from-[#00B4D8] to-[#FF6B1A] bg-clip-text text-transparent mt-2">{eq.resultado?.promedio.toFixed(2)}</p>
+                    <p className="text-2xl font-black text-[#FF6B1A] mt-2">{eq.resultado?.promedio.toFixed(2)}</p>
                     <p className="text-[10px] text-[#6b7c93] mt-1">{eq.resultado?.totalJurados} jurado(s)</p>
                   </div>
                 ))}
@@ -882,7 +887,7 @@ function App() {
       </main>
       <footer className="border-t border-[#00B4D8]/10 py-6 mt-12 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-xs text-[#6b7c93]">SuperBrix © 2026 — Bootcamp Fábrica Digital e Inteligencia Artificial</p>
+          <p className="text-xs text-[#6b7c93]">Bootcamp Digital Factory © 2026 — Fábrica Digital e Inteligencia Artificial</p>
           <p className="text-[10px] text-[#4a5a6a] mt-1">Transformación Digital & IA • SENA Regional Atlántico</p>
         </div>
       </footer>

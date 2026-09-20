@@ -92,22 +92,22 @@
     background: var(--navy-deep);
   }
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, var(--electric-blue), var(--cyan-bright));
+    background: var(--cyan-bright);
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, var(--cyan-bright), var(--neon-lime));
+    background: var(--neon-orange);
   }
 }
 
 @layer components {
-  /* Badge pill con gradiente */
+  /* Badge pill */
   .badge-pill-neon {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1.25rem;
-    background: linear-gradient(135deg, rgba(0, 180, 216, 0.1), rgba(0, 82, 204, 0.1));
+    background: rgba(0, 180, 216, 0.1);
     border: 1px solid rgba(0, 180, 216, 0.3);
     border-radius: 9999px;
     color: var(--cyan-bright);
@@ -137,18 +137,19 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark));
+    background: var(--neon-orange);
     color: var(--navy-deep);
     font-weight: 700;
     border-radius: 0.5rem;
     transition: all 0.2s ease;
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(255, 107, 26, 0.3);
+    box-shadow: 0 2px 8px rgba(255, 107, 26, 0.2);
   }
   .btn-lime:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(255, 107, 26, 0.4);
+    background: var(--neon-orange-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 107, 26, 0.3);
   }
 
   /* Botón glass con borde cian */
@@ -203,18 +204,18 @@
   }
   .progress-lime-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--electric-blue), var(--cyan-bright), var(--neon-orange));
+    background: var(--neon-orange);
     border-radius: 9999px;
     transition: width 0.5s ease;
-    box-shadow: 0 0 10px rgba(255, 107, 26, 0.5);
+    box-shadow: 0 0 8px rgba(255, 107, 26, 0.4);
   }
 
-  /* Línea decorativa con gradiente */
+  /* Línea decorativa */
   .lime-line {
     width: 4px;
-    background: linear-gradient(180deg, var(--cyan-bright), var(--neon-orange));
+    background: var(--neon-orange);
     border-radius: 2px;
-    box-shadow: 0 0 10px rgba(255, 107, 26, 0.5);
+    box-shadow: 0 0 8px rgba(255, 107, 26, 0.4);
   }
 
   /* Número badge con estilo tecnológico */
@@ -224,7 +225,7 @@
     justify-content: center;
     width: 2.5rem;
     height: 2.5rem;
-    background: linear-gradient(135deg, rgba(0, 180, 216, 0.15), rgba(0, 82, 204, 0.15));
+    background: rgba(0, 180, 216, 0.15);
     border: 1px solid rgba(0, 180, 216, 0.3);
     border-radius: 0.5rem;
     color: var(--cyan-bright);
@@ -245,17 +246,17 @@
     backdrop-filter: blur(10px);
   }
   .score-high {
-    background: linear-gradient(135deg, rgba(255, 107, 26, 0.2), rgba(255, 107, 26, 0.1));
+    background: rgba(255, 107, 26, 0.15);
     color: var(--neon-orange);
     border: 1px solid rgba(255, 107, 26, 0.3);
   }
   .score-mid {
-    background: linear-gradient(135deg, rgba(0, 180, 216, 0.2), rgba(0, 180, 216, 0.1));
+    background: rgba(0, 180, 216, 0.15);
     color: var(--cyan-bright);
     border: 1px solid rgba(0, 180, 216, 0.3);
   }
   .score-low {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+    background: rgba(239, 68, 68, 0.15);
     color: #ef4444;
     border: 1px solid rgba(239, 68, 68, 0.3);
   }
