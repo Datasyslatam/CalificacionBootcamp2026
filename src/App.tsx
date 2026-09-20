@@ -193,7 +193,7 @@ function App() {
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#061224]/90 border-b border-[#00B4D8]/20">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#D4F842] to-[#00B4D8] rounded-lg flex items-center justify-center text-lg font-black text-[#061224]">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B1A] to-[#00B4D8] rounded-lg flex items-center justify-center text-lg font-black text-[#061224]">
             SB
           </div>
           <div className="hidden sm:block">
@@ -213,7 +213,7 @@ function App() {
               onClick={() => setVista(item.id)}
               className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                 vista === item.id
-                  ? 'bg-gradient-to-r from-[#D4F842] to-[#00B4D8] text-[#061224]'
+                  ? 'bg-gradient-to-r from-[#FF6B1A] to-[#00B4D8] text-[#061224]'
                   : 'text-[#b8c5d6] hover:text-white hover:bg-white/5'
               }`}
             >
@@ -239,7 +239,7 @@ function App() {
             </span>
             <h2 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
               Reto de Diseño<br />
-              <span className="bg-gradient-to-r from-[#00B4D8] to-[#D4F842] bg-clip-text text-transparent">& Desarrollo</span>
+              <span className="bg-gradient-to-r from-[#00B4D8] to-[#FF6B1A] bg-clip-text text-transparent">& Desarrollo</span>
             </h2>
             <p className="text-lg text-[#b8c5d6] max-w-2xl mb-8">
               Sistema móvil para reportar tiempos y novedades operativas con IA para SuperBrix.
@@ -285,7 +285,7 @@ function App() {
                 <button
                   onClick={() => setEditandoJurados(!editandoJurados)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                    editandoJurados ? 'bg-gradient-to-r from-[#D4F842] to-[#00B4D8] text-[#061224]' : 'bg-white/5 text-[#b8c5d6] hover:bg-white/10 border border-[#00B4D8]/20'
+                    editandoJurados ? 'bg-gradient-to-r from-[#FF6B1A] to-[#00B4D8] text-[#061224]' : 'bg-white/5 text-[#b8c5d6] hover:bg-white/10 border border-[#00B4D8]/20'
                   }`}
                 >
                   {editandoJurados ? '✓ Listo' : '✏️ Editar'}
@@ -360,7 +360,7 @@ function App() {
       <div className="max-w-5xl mx-auto px-4 py-12 relative z-10">
         <span className="badge-pill-neon mb-4 inline-block"><span>◈</span> Contexto del Reto</span>
         <h2 className="text-3xl md:text-4xl font-black text-white mb-2">
-          El Desafío<br /><span className="bg-gradient-to-r from-[#00B4D8] to-[#D4F842] bg-clip-text text-transparent">Industrial</span>
+          El Desafío<br /><span className="bg-gradient-to-r from-[#00B4D8] to-[#FF6B1A] bg-clip-text text-transparent">Industrial</span>
         </h2>
         <p className="text-[#b8c5d6] mb-8 max-w-2xl">Transformación digital para la gestión del tiempo en órdenes de producción.</p>
 
@@ -389,8 +389,8 @@ function App() {
                 ))}
               </ul>
             </div>
-            <div className="card-dark p-6 border-[#D4F842]/30">
-              <h3 className="text-sm font-bold text-[#D4F842] uppercase tracking-wider mb-3">🎯 Objetivo</h3>
+            <div className="card-dark p-6 border-[#FF6B1A]/30">
+              <h3 className="text-sm font-bold text-[#FF6B1A] uppercase tracking-wider mb-3">🎯 Objetivo</h3>
               <p className="text-sm text-[#b8c5d6] leading-relaxed">
                 Diseñar un sistema móvil simple que permita reportar tiempos y novedades, clasifique causas con IA y transforme datos en analítica operativa en tiempo real dentro de Google Workspace.
               </p>
@@ -458,8 +458,8 @@ function App() {
       <div className="max-w-5xl mx-auto px-4 py-12 relative z-10">
         {mensajeExito && (
           <div className="mb-6 card-dark p-4 flex items-center gap-3 border-[#00B4D8]/40 animate-glow">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4F842]/20 to-[#00B4D8]/20 flex items-center justify-center text-[#D4F842]">✓</div>
-            <p className="text-sm font-medium text-[#D4F842]">{mensajeExito}</p>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF6B1A]/20 to-[#00B4D8]/20 flex items-center justify-center text-[#FF6B1A]">✓</div>
+            <p className="text-sm font-medium text-[#FF6B1A]">{mensajeExito}</p>
           </div>
         )}
 
@@ -476,7 +476,7 @@ function App() {
                     <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">{j.avatar}</div>
                     <h4 className="font-bold text-white text-sm">{j.nombre}</h4>
                     <div className="mt-3">
-                      <span className={`text-[10px] px-2 py-1 rounded-full font-mono ${calsJurado > 0 ? 'bg-[#D4F842]/10 text-[#D4F842] border border-[#D4F842]/30' : 'bg-white/5 text-[#6b7c93] border border-white/10'}`}>
+                      <span className={`text-[10px] px-2 py-1 rounded-full font-mono ${calsJurado > 0 ? 'bg-[#FF6B1A]/10 text-[#FF6B1A] border border-[#FF6B1A]/30' : 'bg-white/5 text-[#6b7c93] border border-white/10'}`}>
                         {calsJurado}/{equipos.length}
                       </span>
                     </div>
@@ -489,7 +489,7 @@ function App() {
 
         {juradoActivo && !equipoSeleccionado && (
           <div>
-            <button onClick={() => setJuradoActivo(null)} className="text-[#00B4D8] text-sm mb-4 flex items-center gap-1 hover:text-[#D4F842] transition-colors cursor-pointer">
+            <button onClick={() => setJuradoActivo(null)} className="text-[#00B4D8] text-sm mb-4 flex items-center gap-1 hover:text-[#FF6B1A] transition-colors cursor-pointer">
               ← Cambiar jurado
             </button>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
@@ -501,7 +501,7 @@ function App() {
               </div>
               <button onClick={() => setEditandoEquipos(!editandoEquipos)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                  editandoEquipos ? 'bg-gradient-to-r from-[#D4F842] to-[#00B4D8] text-[#061224]' : 'bg-white/5 text-[#b8c5d6] hover:bg-white/10 border border-[#00B4D8]/20'
+                  editandoEquipos ? 'bg-gradient-to-r from-[#FF6B1A] to-[#00B4D8] text-[#061224]' : 'bg-white/5 text-[#b8c5d6] hover:bg-white/10 border border-[#00B4D8]/20'
                 }`}>
                 {editandoEquipos ? '✓ Listo' : '✏️ Editar equipos'}
               </button>
@@ -513,7 +513,7 @@ function App() {
                 return (
                   <div key={eq.id} className="relative">
                     <button onClick={() => { seleccionarEquipo(eq.id); if (yaCalifico(juradoActivo!, eq.id)) cargarCalificacionExistente(juradoActivo!, eq.id); }}
-                      className={`w-full card-dark p-4 text-left cursor-pointer ${yaCal ? 'border-[#D4F842]/40' : ''}`}>
+                      className={`w-full card-dark p-4 text-left cursor-pointer ${yaCal ? 'border-[#FF6B1A]/40' : ''}`}>
                       <div className="flex items-center justify-between">
                         {editandoEquipos ? (
                           <input type="text" value={eq.nombre} onChange={(e) => actualizarNombreEquipo(eq.id, e.target.value)}
@@ -521,7 +521,7 @@ function App() {
                         ) : (
                           <h4 className="font-bold text-white text-sm">{eq.nombre}</h4>
                         )}
-                        {yaCal && <span className="text-[#D4F842] text-lg">✓</span>}
+                        {yaCal && <span className="text-[#FF6B1A] text-lg">✓</span>}
                       </div>
                       <p className="text-[10px] text-[#6b7c93] mt-1">{yaCal ? 'Calificado' : 'Pendiente'}</p>
                     </button>
@@ -532,7 +532,7 @@ function App() {
                 );
               })}
               {editandoEquipos && (
-                <button onClick={agregarEquipo} className="card-dark p-4 border-dashed border-[#00B4D8]/30 hover:border-[#D4F842]/50 flex items-center justify-center cursor-pointer min-h-[80px]">
+                <button onClick={agregarEquipo} className="card-dark p-4 border-dashed border-[#00B4D8]/30 hover:border-[#FF6B1A]/50 flex items-center justify-center cursor-pointer min-h-[80px]">
                   <span className="text-[#00B4D8] text-sm font-medium">+ Agregar</span>
                 </button>
               )}
@@ -543,7 +543,7 @@ function App() {
         {juradoActivo && equipoSeleccionado && (
           <div>
             <button onClick={() => { setEquipoSeleccionado(null); setPuntuaciones({}); setComentario(''); }}
-              className="text-[#00B4D8] text-sm mb-6 flex items-center gap-1 hover:text-[#D4F842] transition-colors cursor-pointer">
+              className="text-[#00B4D8] text-sm mb-6 flex items-center gap-1 hover:text-[#FF6B1A] transition-colors cursor-pointer">
               ← Volver a equipos
             </button>
 
@@ -586,7 +586,7 @@ function App() {
                             puntuaciones[c.id] === n
                               ? n <= 3 ? 'bg-red-500/20 text-red-400 ring-1 ring-red-500/50'
                               : n <= 6 ? 'bg-[#00B4D8]/20 text-[#00B4D8] ring-1 ring-[#00B4D8]/50'
-                              : 'bg-[#D4F842]/20 text-[#D4F842] ring-1 ring-[#D4F842]/50'
+                              : 'bg-[#FF6B1A]/20 text-[#FF6B1A] ring-1 ring-[#FF6B1A]/50'
                               : 'bg-white/5 text-[#6b7c93] hover:bg-white/10 hover:text-white'
                           }`}>
                           {n}
@@ -599,7 +599,7 @@ function App() {
                       <div className="flex-1 progress-lime">
                         <div className="progress-lime-fill" style={{ width: `${puntuaciones[c.id] * 10}%` }} />
                       </div>
-                      <span className="text-xs font-mono font-bold text-[#D4F842] w-8 text-right">{puntuaciones[c.id]}/10</span>
+                      <span className="text-xs font-mono font-bold text-[#FF6B1A] w-8 text-right">{puntuaciones[c.id]}/10</span>
                     </div>
                   )}
                 </div>
@@ -690,7 +690,7 @@ function App() {
           <div>
             <span className="badge-pill-neon mb-2 inline-block"><span>◉</span> Resultados</span>
             <h2 className="text-3xl font-black text-white">
-              Ranking en <span className="text-[#D4F842]">Tiempo Real</span>
+              Ranking en <span className="text-[#FF6B1A]">Tiempo Real</span>
             </h2>
             <p className="text-sm text-[#6b6b7b] mt-1">{calificaciones.length} de {totalPosible} calificaciones ({progreso}%)</p>
           </div>
@@ -706,7 +706,7 @@ function App() {
         <div className="card-dark p-4 mb-8">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-white">Progreso de calificaciones</span>
-            <span className="text-xs font-mono text-[#D4F842]">{progreso}%</span>
+            <span className="text-xs font-mono text-[#FF6B1A]">{progreso}%</span>
           </div>
           <div className="progress-lime">
             <div className="progress-lime-fill" style={{ width: `${progreso}%` }} />
@@ -744,13 +744,13 @@ function App() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {ranking.slice(0, 3).map((eq, idx) => (
                   <div key={eq.id} className={`p-5 rounded-xl text-center ${
-                    idx === 0 ? 'bg-gradient-to-br from-[#D4F842]/10 to-[#00B4D8]/10 border border-[#D4F842]/30' :
+                    idx === 0 ? 'bg-gradient-to-br from-[#FF6B1A]/10 to-[#00B4D8]/10 border border-[#FF6B1A]/30' :
                     idx === 1 ? 'bg-white/5 border border-white/10' :
                     'bg-white/[0.02] border border-white/5'
                   }`}>
                     <div className="text-3xl mb-2">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}</div>
                     <h4 className="font-bold text-white">{eq.nombre}</h4>
-                    <p className="text-2xl font-black bg-gradient-to-r from-[#00B4D8] to-[#D4F842] bg-clip-text text-transparent mt-2">{eq.resultado?.promedio.toFixed(2)}</p>
+                    <p className="text-2xl font-black bg-gradient-to-r from-[#00B4D8] to-[#FF6B1A] bg-clip-text text-transparent mt-2">{eq.resultado?.promedio.toFixed(2)}</p>
                     <p className="text-[10px] text-[#6b7c93] mt-1">{eq.resultado?.totalJurados} jurado(s)</p>
                   </div>
                 ))}
@@ -768,7 +768,7 @@ function App() {
                       {criterios.map(c => (
                         <th key={c.id} className="text-center p-3 text-[10px] font-semibold text-[#6b7c93] uppercase">
                           {c.nombre.split(' ').slice(0, 2).join(' ')}<br />
-                          <span className="text-[#D4F842]">{c.ponderacion}%</span>
+                          <span className="text-[#FF6B1A]">{c.ponderacion}%</span>
                         </th>
                       ))}
                       <th className="text-center p-4 text-xs font-semibold text-[#6b7c93] uppercase">Total</th>
@@ -833,7 +833,7 @@ function App() {
                             <div key={cal.equipoId} className="flex items-center justify-between bg-[#00B4D8]/5 rounded-lg p-2">
                               <span className="text-xs text-[#b8c5d6]">{equipo?.nombre}</span>
                               <div className="flex items-center gap-2">
-                                <span className="text-xs font-mono font-bold text-[#D4F842]">{puntaje.toFixed(2)}</span>
+                                <span className="text-xs font-mono font-bold text-[#FF6B1A]">{puntaje.toFixed(2)}</span>
                                 <button onClick={() => setConfirmarBorrado(`${j.id}-${cal.equipoId}`)} className="text-red-400/50 hover:text-red-400 text-[10px] cursor-pointer">✕</button>
                               </div>
                             </div>

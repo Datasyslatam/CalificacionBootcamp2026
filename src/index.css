@@ -6,8 +6,8 @@
     --navy-midnight: #0A192F;
     --electric-blue: #0052CC;
     --cyan-bright: #00B4D8;
-    --neon-lime: #D4F842;
-    --neon-lime-dark: #b8e020;
+    --neon-orange: #FF6B1A;
+    --neon-orange-dark: #E55A00;
     --text-primary: #ffffff;
     --text-secondary: #b8c5d6;
     --text-muted: #6b7c93;
@@ -66,10 +66,10 @@
     position: absolute;
     inset: 0;
     background-image: 
-      radial-gradient(circle at 15% 25%, rgba(212, 248, 66, 0.15) 0%, transparent 2%),
+      radial-gradient(circle at 15% 25%, rgba(255, 107, 26, 0.15) 0%, transparent 2%),
       radial-gradient(circle at 85% 75%, rgba(0, 180, 216, 0.2) 0%, transparent 2%),
       radial-gradient(circle at 45% 85%, rgba(0, 82, 204, 0.15) 0%, transparent 2%),
-      radial-gradient(circle at 75% 15%, rgba(212, 248, 66, 0.1) 0%, transparent 2%);
+      radial-gradient(circle at 75% 15%, rgba(255, 107, 26, 0.1) 0%, transparent 2%);
     animation: sparkle 6s ease-in-out infinite;
   }
 
@@ -131,24 +131,24 @@
     box-shadow: 0 0 30px rgba(0, 180, 216, 0.1), inset 0 0 20px rgba(0, 180, 216, 0.02);
   }
 
-  /* Botón principal lima */
+  /* Botón principal naranja */
   .btn-lime {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, var(--neon-lime), var(--neon-lime-dark));
+    background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark));
     color: var(--navy-deep);
     font-weight: 700;
     border-radius: 0.5rem;
     transition: all 0.2s ease;
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(212, 248, 66, 0.2);
+    box-shadow: 0 4px 15px rgba(255, 107, 26, 0.3);
   }
   .btn-lime:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(212, 248, 66, 0.3);
+    box-shadow: 0 6px 25px rgba(255, 107, 26, 0.4);
   }
 
   /* Botón glass con borde cian */
@@ -203,18 +203,18 @@
   }
   .progress-lime-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--electric-blue), var(--cyan-bright), var(--neon-lime));
+    background: linear-gradient(90deg, var(--electric-blue), var(--cyan-bright), var(--neon-orange));
     border-radius: 9999px;
     transition: width 0.5s ease;
-    box-shadow: 0 0 10px rgba(0, 180, 216, 0.5);
+    box-shadow: 0 0 10px rgba(255, 107, 26, 0.5);
   }
 
   /* Línea decorativa con gradiente */
   .lime-line {
     width: 4px;
-    background: linear-gradient(180deg, var(--cyan-bright), var(--neon-lime));
+    background: linear-gradient(180deg, var(--cyan-bright), var(--neon-orange));
     border-radius: 2px;
-    box-shadow: 0 0 10px rgba(0, 180, 216, 0.5);
+    box-shadow: 0 0 10px rgba(255, 107, 26, 0.5);
   }
 
   /* Número badge con estilo tecnológico */
@@ -245,9 +245,9 @@
     backdrop-filter: blur(10px);
   }
   .score-high {
-    background: linear-gradient(135deg, rgba(212, 248, 66, 0.2), rgba(212, 248, 66, 0.1));
-    color: var(--neon-lime);
-    border: 1px solid rgba(212, 248, 66, 0.3);
+    background: linear-gradient(135deg, rgba(255, 107, 26, 0.2), rgba(255, 107, 26, 0.1));
+    color: var(--neon-orange);
+    border: 1px solid rgba(255, 107, 26, 0.3);
   }
   .score-mid {
     background: linear-gradient(135deg, rgba(0, 180, 216, 0.2), rgba(0, 180, 216, 0.1));
@@ -278,16 +278,16 @@
     box-shadow: 0 0 30px rgba(0, 180, 216, 0.2);
   }
   .glow-lime {
-    box-shadow: 0 0 30px rgba(212, 248, 66, 0.2);
+    box-shadow: 0 0 30px rgba(255, 107, 26, 0.2);
   }
 }
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(0, 180, 216, 0.2);
+    box-shadow: 0 0 20px rgba(255, 107, 26, 0.2);
   }
   50% {
-    box-shadow: 0 0 40px rgba(0, 180, 216, 0.4);
+    box-shadow: 0 0 40px rgba(255, 107, 26, 0.4);
   }
 }
 
