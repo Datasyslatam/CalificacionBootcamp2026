@@ -1,26 +1,67 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { jurados, criterios, categoriasOperativas } from './data';
 import { CalificacionJurado } from './types';
 
 type Vista = 'inicio' | 'calificar' | 'resultados' | 'contexto';
 
+const STORAGE_KEY = 'superbrix_calificaciones';
+const STORAGE_EQUIPOS_KEY = 'superbrix_equipos';
+
+function loadFromStorage<T>(key: string, defaultValue: T): T {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) return JSON.parse(stored);
+  } catch (e) {
+    console.error('Error loading from storage:', e);
+  }
+  return defaultValue;
+}
+
+function saveToStorage<T>(key: string, value: T): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.error('Error saving to storage:', e);
+  }
+}
+
 function App() {
   const [vista, setVista] = useState<Vista>('inicio');
   const [juradoActivo, setJuradoActivo] = useState<number | null>(null);
   const [equipoSeleccionado, setEquipoSeleccionado] = useState<number | null>(null);
-  const [calificaciones, setCalificaciones] = useState<CalificacionJurado[]>([]);
-  const [equipos, setEquipos] = useState<{ id: number; nombre: string }[]>([
-    { id: 1, nombre: 'Equipo 1' },
-    { id: 2, nombre: 'Equipo 2' },
-    { id: 3, nombre: 'Equipo 3' },
-    { id: 4, nombre: 'Equipo 4' },
-    { id: 5, nombre: 'Equipo 5' },
-    { id: 6, nombre: 'Equipo 6' },
-  ]);
+  const [calificaciones, setCalificaciones] = useState<CalificacionJurado[]>(() =>
+    loadFromStorage<CalificacionJurado[]>(STORAGE_KEY, [])
+  );
+  const [equipos, setEquipos] = useState<{ id: number; nombre: string }[]>(() =>
+    loadFromStorage<{ id: number; nombre: string }[]>(STORAGE_EQUIPOS_KEY, [
+      { id: 1, nombre: 'Equipo 1' },
+      { id: 2, nombre: 'Equipo 2' },
+      { id: 3, nombre: 'Equipo 3' },
+      { id: 4, nombre: 'Equipo 4' },
+      { id: 5, nombre: 'Equipo 5' },
+      { id: 6, nombre: 'Equipo 6' },
+      { id: 7, nombre: 'Equipo 7' },
+      { id: 8, nombre: 'Equipo 8' },
+      { id: 9, nombre: 'Equipo 9' },
+      { id: 10, nombre: 'Equipo 10' },
+    ])
+  );
   const [editandoEquipos, setEditandoEquipos] = useState(false);
   const [comentario, setComentario] = useState('');
   const [puntuaciones, setPuntuaciones] = useState<Record<string, number>>({});
   const [mensajeExito, setMensajeExito] = useState('');
+  const [confirmarBorrado, setConfirmarBorrado] = useState<string | null>(null); // 'all' | `${juradoId}-${equipoId}`
+  const [mostrarExportar, setMostrarExportar] = useState(false);
+
+  // Persistir calificaciones
+  useEffect(() => {
+    saveToStorage(STORAGE_KEY, calificaciones);
+  }, [calificaciones]);
+
+  // Persistir equipos
+  useEffect(() => {
+    saveToStorage(STORAGE_EQUIPOS_KEY, equipos);
+  }, [equipos]);
 
   const seleccionarJurado = (id: number) => {
     setJuradoActivo(id);
@@ -39,7 +80,7 @@ function App() {
 
   const guardarCalificacion = () => {
     if (!juradoActivo || !equipoSeleccionado) return;
-    
+
     const todosCalificados = criterios.every(c => puntuaciones[c.id] !== undefined);
     if (!todosCalificados) {
       alert('Por favor califique todos los criterios antes de guardar.');
@@ -54,7 +95,6 @@ function App() {
       timestamp: new Date(),
     };
 
-    // Reemplazar si ya existe una calificación previa de este jurado para este equipo
     setCalificaciones(prev => {
       const filtradas = prev.filter(
         c => !(c.juradoId === juradoActivo && c.equipoId === equipoSeleccionado)
@@ -67,6 +107,67 @@ function App() {
     setEquipoSeleccionado(null);
     setPuntuaciones({});
     setComentario('');
+  };
+
+  const borrarCalificacion = (juradoId: number, equipoId: number) => {
+    setCalificaciones(prev => prev.filter(
+      c => !(c.juradoId === juradoId && c.equipoId === equipoId)
+    ));
+    setConfirmarBorrado(null);
+    setMensajeExito('Calificación eliminada correctamente');
+    setTimeout(() => setMensajeExito(''), 3000);
+  };
+
+  const borrarTodasCalificaciones = () => {
+    setCalificaciones([]);
+    setConfirmarBorrado(null);
+    setMensajeExito('Todas las calificaciones han sido eliminadas. Los jurados pueden comenzar una nueva ronda.');
+    setTimeout(() => setMensajeExito(''), 4000);
+  };
+
+  const borrarCalificacionesJurado = (juradoId: number) => {
+    setCalificaciones(prev => prev.filter(c => c.juradoId !== juradoId));
+    setConfirmarBorrado(null);
+    setMensajeExito(`Calificaciones del ${jurados.find(j => j.id === juradoId)?.nombre} eliminadas`);
+    setTimeout(() => setMensajeExito(''), 3000);
+  };
+
+  const exportarResultados = () => {
+    const ranking = obtenerRanking();
+    let csv = 'Posicion,Equipo,Puntaje Total,Jurados,';
+    csv += criterios.map(c => c.nombre).join(',');
+    csv += '\n';
+
+    ranking.forEach((eq, idx) => {
+      const promediosPorCriterio = criterios.map(c => {
+        const cals = eq.resultado!.detalle.map(d => d.calificaciones[c.id] || 0);
+        return (cals.reduce((a, b) => a + b, 0) / cals.length).toFixed(2);
+      });
+      csv += `${idx + 1},${eq.nombre},${eq.resultado?.promedio.toFixed(2)},${eq.resultado?.totalJurados},${promediosPorCriterio.join(',')}\n`;
+    });
+
+    // Detalle por jurado
+    csv += '\n\nDetalle por Jurado\n';
+    csv += 'Jurado,Equipo,';
+    csv += criterios.map(c => c.nombre).join(',');
+    csv += ',Puntaje Ponderado,Comentarios\n';
+
+    calificaciones.forEach(cal => {
+      const jurado = jurados.find(j => j.id === cal.juradoId);
+      const equipo = equipos.find(e => e.id === cal.equipoId);
+      const puntaje = criterios.reduce((acc, c) => acc + (cal.calificaciones[c.id] || 0) * (c.ponderacion / 100), 0);
+      const puntuacionesArr = criterios.map(c => cal.calificaciones[c.id] || 0);
+      csv += `${jurado?.nombre},${equipo?.nombre},${puntuacionesArr.join(',')},${puntaje.toFixed(2)},"${cal.comentarios.replace(/"/g, '""')}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `SuperBrix_Resultados_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setMostrarExportar(false);
   };
 
   const calcularPuntajeEquipo = (equipoId: number) => {
@@ -212,27 +313,32 @@ function App() {
         <h3 className="text-2xl font-bold text-gray-900 mb-2">Panel de Jurados</h3>
         <p className="text-gray-600 mb-6">Seleccione su nombre para acceder al formulario de calificación</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {jurados.map(j => (
-            <button
-              key={j.id}
-              onClick={() => seleccionarJurado(j.id)}
-              className="bg-white rounded-xl p-6 border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all group cursor-pointer"
-            >
-              <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">
-                {j.avatar}
-              </div>
-              <h4 className="font-bold text-gray-900">{j.nombre}</h4>
-              <p className="text-sm text-gray-500">{j.cargo}</p>
-              <div className="mt-3 text-xs text-blue-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                Click para calificar →
-              </div>
-            </button>
-          ))}
+          {jurados.map(j => {
+            const calsJurado = calificaciones.filter(c => c.juradoId === j.id).length;
+            return (
+              <button
+                key={j.id}
+                onClick={() => seleccionarJurado(j.id)}
+                className="bg-white rounded-xl p-6 border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all group cursor-pointer"
+              >
+                <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">
+                  {j.avatar}
+                </div>
+                <h4 className="font-bold text-gray-900">{j.nombre}</h4>
+                <p className="text-sm text-gray-500">{j.cargo}</p>
+                <div className="mt-3">
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${calsJurado > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {calsJurado}/{equipos.length} equipos
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Resumen rápido */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl">👥</div>
@@ -260,6 +366,26 @@ function App() {
             </div>
           </div>
         </div>
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center text-2xl">📈</div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">
+                {Math.round((calificaciones.length / (jurados.length * equipos.length)) * 100)}%
+              </p>
+              <p className="text-sm text-gray-500">Progreso total</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Estado de almacenamiento */}
+      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3">
+        <span className="text-xl">💾</span>
+        <div>
+          <p className="text-sm font-medium text-blue-800">Datos almacenados localmente</p>
+          <p className="text-xs text-blue-600">Las calificaciones se guardan automáticamente en su navegador. Puede exportar los resultados en cualquier momento.</p>
+        </div>
       </div>
     </div>
   );
@@ -267,7 +393,7 @@ function App() {
   const renderContexto = () => (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold text-gray-900 mb-6">Contexto del Reto</h2>
-      
+
       <div className="space-y-6">
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <h3 className="text-xl font-bold text-blue-800 mb-3 flex items-center gap-2">
@@ -393,7 +519,7 @@ function App() {
   const renderCalificar = () => (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {mensajeExito && (
-        <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 animate-pulse">
+        <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
           <span className="text-2xl">✅</span>
           <p className="text-green-800 font-medium">{mensajeExito}</p>
         </div>
@@ -405,23 +531,26 @@ function App() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Seleccione su perfil de jurado</h2>
           <p className="text-gray-600 mb-6">Cada jurado califica de forma independiente</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {jurados.map(j => (
-              <button
-                key={j.id}
-                onClick={() => seleccionarJurado(j.id)}
-                className={`bg-white rounded-xl p-6 border-2 transition-all cursor-pointer ${
-                  juradoActivo === j.id ? 'border-blue-500 shadow-lg' : 'border-gray-200 hover:border-blue-300'
-                }`}
-              >
-                <div className="text-4xl mb-3">{j.avatar}</div>
-                <h4 className="font-bold text-gray-900">{j.nombre}</h4>
-                <div className="mt-2">
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                    {calificaciones.filter(c => c.juradoId === j.id).length} calificados
-                  </span>
-                </div>
-              </button>
-            ))}
+            {jurados.map(j => {
+              const calsJurado = calificaciones.filter(c => c.juradoId === j.id).length;
+              return (
+                <button
+                  key={j.id}
+                  onClick={() => seleccionarJurado(j.id)}
+                  className={`bg-white rounded-xl p-6 border-2 transition-all cursor-pointer ${
+                    juradoActivo === j.id ? 'border-blue-500 shadow-lg' : 'border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  <div className="text-4xl mb-3">{j.avatar}</div>
+                  <h4 className="font-bold text-gray-900">{j.nombre}</h4>
+                  <div className="mt-2">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${calsJurado > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                      {calsJurado}/{equipos.length} calificados
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -429,7 +558,7 @@ function App() {
       {/* Selección de equipo */}
       {juradoActivo && !equipoSeleccionado && (
         <div>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
             <div>
               <button onClick={() => setJuradoActivo(null)} className="text-blue-600 hover:text-blue-800 text-sm mb-2 flex items-center gap-1">
                 ← Cambiar jurado
@@ -447,7 +576,7 @@ function App() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {equipos.map(eq => {
               const yaCal = yaCalifico(juradoActivo!, eq.id);
               return (
@@ -475,7 +604,7 @@ function App() {
                       ) : (
                         <h4 className="font-bold text-gray-900 text-lg">{eq.nombre}</h4>
                       )}
-                      {yaCal && <span className="text-green-600 text-xl">✓</span>}
+                      {yaCal && <span className="text-green-600 text-xl ml-2">✓</span>}
                     </div>
                     <p className="text-sm text-gray-500 mt-1">
                       {yaCal ? 'Ya calificado - Click para editar' : 'Sin calificar'}
@@ -484,7 +613,7 @@ function App() {
                   {editandoEquipos && (
                     <button
                       onClick={() => eliminarEquipo(eq.id)}
-                      className="absolute top-2 right-2 text-red-400 hover:text-red-600 text-sm"
+                      className="absolute top-2 right-2 text-red-400 hover:text-red-600 text-sm bg-white rounded-full w-6 h-6 flex items-center justify-center shadow"
                     >
                       ✕
                     </button>
@@ -495,7 +624,7 @@ function App() {
             {editandoEquipos && (
               <button
                 onClick={agregarEquipo}
-                className="bg-gray-50 rounded-xl p-6 border-2 border-dashed border-gray-300 hover:border-blue-400 transition-all flex items-center justify-center cursor-pointer"
+                className="bg-gray-50 rounded-xl p-6 border-2 border-dashed border-gray-300 hover:border-blue-400 transition-all flex items-center justify-center cursor-pointer min-h-[120px]"
               >
                 <span className="text-gray-500 font-medium">+ Agregar equipo</span>
               </button>
@@ -513,16 +642,26 @@ function App() {
           >
             ← Volver a selección de equipos
           </button>
-          
+
           <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm mb-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                {jurados.find(j => j.id === juradoActivo)?.avatar}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  {jurados.find(j => j.id === juradoActivo)?.avatar}
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900">{jurados.find(j => j.id === juradoActivo)?.nombre}</p>
+                  <p className="text-sm text-gray-500">Calificando: <strong>{equipos.find(e => e.id === equipoSeleccionado)?.nombre}</strong></p>
+                </div>
               </div>
-              <div>
-                <p className="font-bold text-gray-900">{jurados.find(j => j.id === juradoActivo)?.nombre}</p>
-                <p className="text-sm text-gray-500">Calificando: <strong>{equipos.find(e => e.id === equipoSeleccionado)?.nombre}</strong></p>
-              </div>
+              {calificaciones.some(c => c.juradoId === juradoActivo && c.equipoId === equipoSeleccionado) && (
+                <button
+                  onClick={() => setConfirmarBorrado(`${juradoActivo}-${equipoSeleccionado}`)}
+                  className="text-red-500 hover:text-red-700 text-sm font-medium flex items-center gap-1 bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors"
+                >
+                  🗑️ Borrar
+                </button>
+              )}
             </div>
           </div>
 
@@ -539,7 +678,7 @@ function App() {
                     </div>
                     <p className="text-sm text-gray-600">{c.descripcion}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
                       <button
                         key={n}
@@ -627,24 +766,157 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Modal de confirmación de borrado individual */}
+      {confirmarBorrado && confirmarBorrado !== 'all' && !confirmarBorrado.startsWith('jurado-') && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl">
+            <div className="text-center mb-4">
+              <span className="text-4xl">⚠️</span>
+              <h3 className="text-xl font-bold text-gray-900 mt-2">¿Borrar esta calificación?</h3>
+              <p className="text-gray-600 mt-2">Esta acción no se puede deshacer. El jurado deberá volver a calificar este equipo.</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmarBorrado(null)}
+                className="flex-1 py-3 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  const [jId, eId] = confirmarBorrado.split('-').map(Number);
+                  borrarCalificacion(jId, eId);
+                }}
+                className="flex-1 py-3 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors cursor-pointer"
+              >
+                Sí, borrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal confirmación borrado por jurado */}
+      {confirmarBorrado && confirmarBorrado.startsWith('jurado-') && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl">
+            <div className="text-center mb-4">
+              <span className="text-4xl">⚠️</span>
+              <h3 className="text-xl font-bold text-gray-900 mt-2">¿Borrar todas las calificaciones de este jurado?</h3>
+              <p className="text-gray-600 mt-2">Se eliminarán todas las calificaciones realizadas por este jurado. Esta acción no se puede deshacer.</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmarBorrado(null)}
+                className="flex-1 py-3 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  const jId = parseInt(confirmarBorrado.replace('jurado-', ''));
+                  borrarCalificacionesJurado(jId);
+                }}
+                className="flex-1 py-3 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors cursor-pointer"
+              >
+                Sí, borrar todo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
   const renderResultados = () => {
     const ranking = obtenerRanking();
+    const totalPosible = jurados.length * equipos.length;
+    const progreso = Math.round((calificaciones.length / totalPosible) * 100);
 
     return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">📊 Resultados en Tiempo Real</h2>
-        <p className="text-gray-600 mb-8">
-          {calificaciones.length} calificaciones registradas de {jurados.length * equipos.length} posibles
-        </p>
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-1">📊 Resultados en Tiempo Real</h2>
+            <p className="text-gray-600">
+              {calificaciones.length} de {totalPosible} calificaciones registradas ({progreso}% completado)
+            </p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setMostrarExportar(!mostrarExportar)}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 cursor-pointer"
+            >
+              📥 Exportar CSV
+            </button>
+            {calificaciones.length > 0 && (
+              <button
+                onClick={() => setConfirmarBorrado('all')}
+                className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 cursor-pointer"
+              >
+                🗑️ Nueva Ronda
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Barra de progreso */}
+        <div className="mb-8 bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">Progreso de calificaciones</span>
+            <span className="text-sm font-bold text-blue-700">{progreso}%</span>
+          </div>
+          <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
+              style={{ width: `${progreso}%` }}
+            />
+          </div>
+          <div className="flex justify-between mt-2 text-xs text-gray-500">
+            <span>0 calificaciones</span>
+            <span>{totalPosible} calificaciones (5 jurados × {equipos.length} equipos)</span>
+          </div>
+        </div>
+
+        {/* Exportar panel */}
+        {mostrarExportar && (
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📥</span>
+              <div>
+                <p className="text-sm font-medium text-green-800">Exportar resultados</p>
+                <p className="text-xs text-green-600">Descargue un archivo CSV con todos los resultados y detalles</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setMostrarExportar(false)}
+                className="px-4 py-2 rounded-lg border border-green-300 text-green-700 text-sm font-medium hover:bg-green-100 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={exportarResultados}
+                className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors cursor-pointer"
+              >
+                Descargar CSV
+              </button>
+            </div>
+          </div>
+        )}
 
         {ranking.length === 0 ? (
           <div className="bg-white rounded-xl p-12 border border-gray-200 text-center">
             <div className="text-6xl mb-4">📋</div>
             <h3 className="text-xl font-bold text-gray-700 mb-2">Sin calificaciones aún</h3>
-            <p className="text-gray-500">Los jurados deben comenzar a calificar los equipos para ver resultados aquí.</p>
+            <p className="text-gray-500 mb-4">Los jurados deben comenzar a calificar los equipos para ver resultados aquí.</p>
+            <button
+              onClick={() => setVista('calificar')}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors cursor-pointer"
+            >
+              Ir a calificar →
+            </button>
           </div>
         ) : (
           <>
@@ -675,11 +947,16 @@ function App() {
                     </div>
                   ))}
                 </div>
+                {ranking.length > 3 && (
+                  <div className="mt-4 text-center">
+                    <p className="text-sm text-gray-500">Y {ranking.length - 3} equipo(s) más en la tabla completa ↓</p>
+                  </div>
+                )}
               </div>
             )}
 
             {/* Tabla completa */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-8">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50">
@@ -739,7 +1016,7 @@ function App() {
               </div>
             </div>
 
-            {/* Detalle por jurado */}
+            {/* Detalle por jurado con opción de borrar */}
             <div className="mt-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Detalle por Jurado</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -747,12 +1024,23 @@ function App() {
                   const calsJurado = calificaciones.filter(c => c.juradoId === j.id);
                   return (
                     <div key={j.id} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="text-2xl">{j.avatar}</span>
-                        <div>
-                          <p className="font-bold text-gray-900">{j.nombre}</p>
-                          <p className="text-xs text-gray-500">{calsJurado.length} equipo(s) calificado(s)</p>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{j.avatar}</span>
+                          <div>
+                            <p className="font-bold text-gray-900">{j.nombre}</p>
+                            <p className="text-xs text-gray-500">{calsJurado.length} equipo(s) calificado(s)</p>
+                          </div>
                         </div>
+                        {calsJurado.length > 0 && (
+                          <button
+                            onClick={() => setConfirmarBorrado(`jurado-${j.id}`)}
+                            className="text-red-400 hover:text-red-600 text-xs font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors cursor-pointer"
+                            title="Borrar todas las calificaciones de este jurado"
+                          >
+                            🗑️ Reset
+                          </button>
+                        )}
                       </div>
                       {calsJurado.length > 0 ? (
                         <div className="space-y-2">
@@ -762,7 +1050,16 @@ function App() {
                             return (
                               <div key={cal.equipoId} className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
                                 <span className="text-sm font-medium text-gray-700">{equipo?.nombre}</span>
-                                <span className="text-sm font-bold text-blue-700">{puntaje.toFixed(2)}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold text-blue-700">{puntaje.toFixed(2)}</span>
+                                  <button
+                                    onClick={() => setConfirmarBorrado(`${j.id}-${cal.equipoId}`)}
+                                    className="text-red-400 hover:text-red-600 text-xs cursor-pointer"
+                                    title="Borrar esta calificación"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
                               </div>
                             );
                           })}
@@ -777,6 +1074,49 @@ function App() {
             </div>
           </>
         )}
+
+        {/* Modal de confirmación borrado total */}
+        {confirmarBorrado === 'all' && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl">
+              <div className="text-center mb-4">
+                <span className="text-5xl">🗑️</span>
+                <h3 className="text-xl font-bold text-gray-900 mt-3">Iniciar Nueva Ronda</h3>
+                <p className="text-gray-600 mt-2">
+                  Se eliminarán <strong>todas las {calificaciones.length} calificaciones</strong> registradas. Los jurados podrán comenzar una nueva ronda de evaluación desde cero.
+                </p>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4">
+                  <p className="text-xs text-amber-700">💡 <strong>Tip:</strong> Considere exportar los resultados actuales antes de borrarlos.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmarBorrado(null)}
+                  className="flex-1 py-3 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    exportarResultados();
+                    borrarTodasCalificaciones();
+                  }}
+                  className="flex-1 py-3 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors cursor-pointer"
+                >
+                  Exportar y Borrar
+                </button>
+              </div>
+              <button
+                onClick={() => {
+                  borrarTodasCalificaciones();
+                }}
+                className="w-full mt-2 py-3 rounded-lg border-2 border-red-300 text-red-600 font-medium hover:bg-red-50 transition-colors cursor-pointer"
+              >
+                Solo Borrar (sin exportar)
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -788,7 +1128,7 @@ function App() {
       {vista === 'contexto' && renderContexto()}
       {vista === 'calificar' && renderCalificar()}
       {vista === 'resultados' && renderResultados()}
-      
+
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-6 mt-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
