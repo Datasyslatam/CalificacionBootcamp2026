@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
-import { jurados, criterios, categoriasOperativas } from './data';
-import { CalificacionJurado } from './types';
+import { jurados as juradosDefault, criterios, categoriasOperativas } from './data';
+import { CalificacionJurado, Jurado } from './types';
 
 type Vista = 'inicio' | 'calificar' | 'resultados' | 'contexto';
 
 const STORAGE_KEY = 'superbrix_calificaciones';
 const STORAGE_EQUIPOS_KEY = 'superbrix_equipos';
+const STORAGE_JURADOS_KEY = 'superbrix_jurados';
 
 function loadFromStorage<T>(key: string, defaultValue: T): T {
   try {
@@ -46,7 +47,11 @@ function App() {
       { id: 10, nombre: 'Equipo 10' },
     ])
   );
+  const [listaJurados, setListaJurados] = useState<Jurado[]>(() =>
+    loadFromStorage<Jurado[]>(STORAGE_JURADOS_KEY, juradosDefault)
+  );
   const [editandoEquipos, setEditandoEquipos] = useState(false);
+  const [editandoJurados, setEditandoJurados] = useState(false);
   const [comentario, setComentario] = useState('');
   const [puntuaciones, setPuntuaciones] = useState<Record<string, number>>({});
   const [mensajeExito, setMensajeExito] = useState('');
@@ -62,6 +67,11 @@ function App() {
   useEffect(() => {
     saveToStorage(STORAGE_EQUIPOS_KEY, equipos);
   }, [equipos]);
+
+  // Persistir jurados
+  useEffect(() => {
+    saveToStorage(STORAGE_JURADOS_KEY, listaJurados);
+  }, [listaJurados]);
 
   const seleccionarJurado = (id: number) => {
     setJuradoActivo(id);
@@ -128,7 +138,7 @@ function App() {
   const borrarCalificacionesJurado = (juradoId: number) => {
     setCalificaciones(prev => prev.filter(c => c.juradoId !== juradoId));
     setConfirmarBorrado(null);
-    setMensajeExito(`Calificaciones del ${jurados.find(j => j.id === juradoId)?.nombre} eliminadas`);
+    setMensajeExito(`Calificaciones del ${listaJurados.find(j => j.id === juradoId)?.nombre} eliminadas`);
     setTimeout(() => setMensajeExito(''), 3000);
   };
 
@@ -153,7 +163,7 @@ function App() {
     csv += ',Puntaje Ponderado,Comentarios\n';
 
     calificaciones.forEach(cal => {
-      const jurado = jurados.find(j => j.id === cal.juradoId);
+      const jurado = listaJurados.find(j => j.id === cal.juradoId);
       const equipo = equipos.find(e => e.id === cal.equipoId);
       const puntaje = criterios.reduce((acc, c) => acc + (cal.calificaciones[c.id] || 0) * (c.ponderacion / 100), 0);
       const puntuacionesArr = criterios.map(c => cal.calificaciones[c.id] || 0);
@@ -229,6 +239,24 @@ function App() {
     if (equipos.length <= 1) return;
     setEquipos(prev => prev.filter(e => e.id !== id));
     setCalificaciones(prev => prev.filter(c => c.equipoId !== id));
+  };
+
+  const actualizarNombreJurado = (id: number, nombre: string) => {
+    setListaJurados(prev => prev.map(j => j.id === id ? { ...j, nombre } : j));
+  };
+
+  const actualizarCargoJurado = (id: number, cargo: string) => {
+    setListaJurados(prev => prev.map(j => j.id === id ? { ...j, cargo } : j));
+  };
+
+  const actualizarAvatarJurado = (id: number, avatar: string) => {
+    setListaJurados(prev => prev.map(j => j.id === id ? { ...j, avatar } : j));
+  };
+
+  const resetearJurados = () => {
+    setListaJurados(juradosDefault);
+    setMensajeExito('Nombres de jurados restaurados a valores predeterminados');
+    setTimeout(() => setMensajeExito(''), 3000);
   };
 
   // ============ RENDER ============
@@ -310,28 +338,91 @@ function App() {
 
       {/* Jurados */}
       <div className="mb-8">
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">Panel de Jurados</h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-2xl font-bold text-gray-900">Panel de Jurados</h3>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setEditandoJurados(!editandoJurados)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${editandoJurados ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+            >
+              {editandoJurados ? '✓ Listo' : '✏️ Editar jurados'}
+            </button>
+            {editandoJurados && (
+              <button
+                onClick={resetearJurados}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 hover:bg-amber-200 text-amber-700 transition-colors cursor-pointer"
+              >
+                🔄 Restaurar
+              </button>
+            )}
+          </div>
+        </div>
         <p className="text-gray-600 mb-6">Seleccione su nombre para acceder al formulario de calificación</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {jurados.map(j => {
+          {listaJurados.map(j => {
             const calsJurado = calificaciones.filter(c => c.juradoId === j.id).length;
             return (
-              <button
-                key={j.id}
-                onClick={() => seleccionarJurado(j.id)}
-                className="bg-white rounded-xl p-6 border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all group cursor-pointer"
-              >
-                <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">
-                  {j.avatar}
-                </div>
-                <h4 className="font-bold text-gray-900">{j.nombre}</h4>
-                <p className="text-sm text-gray-500">{j.cargo}</p>
-                <div className="mt-3">
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${calsJurado > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                    {calsJurado}/{equipos.length} equipos
-                  </span>
-                </div>
-              </button>
+              <div key={j.id} className="relative">
+                <button
+                  onClick={() => !editandoJurados && seleccionarJurado(j.id)}
+                  className={`w-full bg-white rounded-xl p-6 border-2 transition-all group cursor-pointer ${
+                    editandoJurados ? 'border-amber-300 hover:border-amber-400' : 'border-gray-200 hover:border-blue-500 hover:shadow-lg'
+                  }`}
+                >
+                  {editandoJurados ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={j.avatar}
+                          onChange={(e) => actualizarAvatarJurado(j.id, e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-2xl bg-transparent border-none p-0 cursor-pointer"
+                        >
+                          <option value="👤">👤</option>
+                          <option value="👩">👩</option>
+                          <option value="👨">👨</option>
+                          <option value="👩‍💼">👩‍💼</option>
+                          <option value="👨‍💼">👨‍💼</option>
+                          <option value="👩‍🔬">👩‍🔬</option>
+                          <option value="👨‍🔬">👨‍🔬</option>
+                          <option value="🧑‍💻">🧑‍💻</option>
+                          <option value="👩‍🏫">👩‍🏫</option>
+                          <option value="👨‍🏫">👨‍🏫</option>
+                        </select>
+                      </div>
+                      <input
+                        type="text"
+                        value={j.nombre}
+                        onChange={(e) => actualizarNombreJurado(j.id, e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-bold text-gray-900 bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none w-full text-sm"
+                        placeholder="Nombre del jurado"
+                      />
+                      <input
+                        type="text"
+                        value={j.cargo}
+                        onChange={(e) => actualizarCargoJurado(j.id, e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs text-gray-500 bg-transparent border-b border-gray-200 focus:border-blue-500 outline-none w-full"
+                        placeholder="Cargo"
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">
+                        {j.avatar}
+                      </div>
+                      <h4 className="font-bold text-gray-900">{j.nombre}</h4>
+                      <p className="text-sm text-gray-500">{j.cargo}</p>
+                      <div className="mt-3">
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${calsJurado > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                          {calsJurado}/{equipos.length} equipos
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </button>
+              </div>
             );
           })}
         </div>
@@ -343,7 +434,7 @@ function App() {
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl">👥</div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{jurados.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{listaJurados.length}</p>
               <p className="text-sm text-gray-500">Jurados activos</p>
             </div>
           </div>
@@ -371,7 +462,7 @@ function App() {
             <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center text-2xl">📈</div>
             <div>
               <p className="text-2xl font-bold text-gray-900">
-                {Math.round((calificaciones.length / (jurados.length * equipos.length)) * 100)}%
+                {Math.round((calificaciones.length / (listaJurados.length * equipos.length)) * 100)}%
               </p>
               <p className="text-sm text-gray-500">Progreso total</p>
             </div>
@@ -531,7 +622,7 @@ function App() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Seleccione su perfil de jurado</h2>
           <p className="text-gray-600 mb-6">Cada jurado califica de forma independiente</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {jurados.map(j => {
+            {listaJurados.map(j => {
               const calsJurado = calificaciones.filter(c => c.juradoId === j.id).length;
               return (
                 <button
@@ -564,7 +655,7 @@ function App() {
                 ← Cambiar jurado
               </button>
               <h2 className="text-2xl font-bold text-gray-900">
-                {jurados.find(j => j.id === juradoActivo)?.nombre} - Seleccionar equipo
+                {listaJurados.find(j => j.id === juradoActivo)?.nombre} - Seleccionar equipo
               </h2>
               <p className="text-gray-600">Seleccione el equipo que desea calificar</p>
             </div>
@@ -647,10 +738,10 @@ function App() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  {jurados.find(j => j.id === juradoActivo)?.avatar}
+                  {listaJurados.find(j => j.id === juradoActivo)?.avatar}
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900">{jurados.find(j => j.id === juradoActivo)?.nombre}</p>
+                  <p className="font-bold text-gray-900">{listaJurados.find(j => j.id === juradoActivo)?.nombre}</p>
                   <p className="text-sm text-gray-500">Calificando: <strong>{equipos.find(e => e.id === equipoSeleccionado)?.nombre}</strong></p>
                 </div>
               </div>
@@ -831,7 +922,7 @@ function App() {
 
   const renderResultados = () => {
     const ranking = obtenerRanking();
-    const totalPosible = jurados.length * equipos.length;
+    const totalPosible = listaJurados.length * equipos.length;
     const progreso = Math.round((calificaciones.length / totalPosible) * 100);
 
     return (
@@ -1006,7 +1097,7 @@ function App() {
                             </span>
                           </td>
                           <td className="p-4 text-center text-gray-600">
-                            {eq.resultado?.totalJurados}/{jurados.length}
+                            {eq.resultado?.totalJurados}/{listaJurados.length}
                           </td>
                         </tr>
                       );
@@ -1020,7 +1111,7 @@ function App() {
             <div className="mt-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Detalle por Jurado</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {jurados.map(j => {
+                {listaJurados.map(j => {
                   const calsJurado = calificaciones.filter(c => c.juradoId === j.id);
                   return (
                     <div key={j.id} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
