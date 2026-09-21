@@ -235,7 +235,7 @@ function App() {
     const progreso = Math.round((calificaciones.length / (listaJurados.length * equipos.length)) * 100);
     return (
       <div className="relative">
-        <div className="bg-network-nodes bg-data-sparkles" />
+        {/* Fondo tecnológico ya aplicado globalmente */}
         <div className="max-w-7xl mx-auto px-4 py-12 relative z-10">
           {/* Hero */}
           <div className="mb-12">
@@ -361,7 +361,6 @@ function App() {
 
   const renderContexto = () => (
     <div className="relative">
-      <div className="bg-network-nodes" />
       <div className="max-w-5xl mx-auto px-4 py-12 relative z-10">
         <span className="badge-pill-neon mb-4 inline-block"><span>◈</span> Contexto del Reto</span>
         <h2 className="text-3xl md:text-4xl font-black text-white mb-2">
@@ -459,7 +458,6 @@ function App() {
 
   const renderCalificar = () => (
     <div className="relative">
-      <div className="bg-network-nodes" />
       <div className="max-w-5xl mx-auto px-4 py-12 relative z-10">
         {mensajeExito && (
           <div className="mb-6 card-dark p-4 flex items-center gap-3 border-[#00B4D8]/40 animate-glow">
@@ -877,9 +875,17 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#061224] via-[#0A192F] to-[#061224]">
+    <div className="min-h-screen relative">
+      {/* Capas de fondo tecnológico premium */}
+      <div className="bg-tech-premium" />
+      <div className="bg-hex-grid" />
+      <div className="bg-nodes-network" />
+      <div className="bg-particles" />
+      <div className="bg-volumetric-light" />
+      <div className="bg-diagonal-stripes" />
+      
       {renderHeader()}
-      <main className="relative">
+      <main className="relative z-10">
         {vista === 'inicio' && renderInicio()}
         {vista === 'contexto' && renderContexto()}
         {vista === 'calificar' && renderCalificar()}
