@@ -888,7 +888,7 @@ function App() {
       <footer className="border-t border-[#00B4D8]/10 py-6 mt-12 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-xs text-[#6b7c93]">Bootcamp Digital Factory © 2026 — Fábrica Digital e Inteligencia Artificial</p>
-          <p className="text-[10px] text-[#4a5a6a] mt-1">Transformación Digital & IA • SENA Regional Atlántico</p>
+          <p className="text-[10px] text-[#4a5a6a] mt-1">Transformación Digital & IA • Datasyslatam Group</p>
         </div>
       </footer>
     </div>
