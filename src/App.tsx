@@ -74,51 +74,55 @@ function App() {
     if (usarSupabase) {
       const cargarDatos = async () => {
         try {
+          console.log('🔄 Cargando datos desde Supabase...');
+          
           // Cargar equipos
           const equiposDb = await db.getAllEquipos();
-          setEquipos(equiposDb.map(db.mapSupabaseEquipo));
+          const equiposMapeados = equiposDb.map(db.mapSupabaseEquipo);
+          setEquipos(equiposMapeados);
+          console.log('✅ Equipos cargados:', equiposMapeados.length);
 
           // Cargar jurados
           const juradosDb = await db.getAllJurados();
-          setListaJurados(juradosDb.map(db.mapSupabaseJurado));
+          const juradosMapeados = juradosDb.map(db.mapSupabaseJurado);
+          setListaJurados(juradosMapeados);
+          console.log('✅ Jurados cargados:', juradosMapeados.length);
 
           // Cargar calificaciones
           const calificacionesDb = await db.getAllCalificaciones();
-          setCalificaciones(calificacionesDb.map(db.mapSupabaseCalificacion));
+          const calificacionesMapeadas = calificacionesDb.map(db.mapSupabaseCalificacion);
+          setCalificaciones(calificacionesMapeadas);
+          console.log('✅ Calificaciones cargadas:', calificacionesMapeadas.length);
 
-          console.log('✅ Datos cargados desde Supabase');
+          console.log('✅ Todos los datos cargados desde Supabase exitosamente');
         } catch (error) {
           console.error('❌ Error cargando datos desde Supabase:', error);
+          console.error('Detalles del error:', error);
         }
       };
       cargarDatos();
+    } else {
+      console.log('⚠️ Supabase no configurado, usando localStorage');
     }
   }, []);
 
-  // Sincronizar calificaciones con Supabase
+  // Sincronizar calificaciones - Solo localStorage si NO está usando Supabase
   useEffect(() => {
-    if (usarSupabase) {
-      // Solo guardar en localStorage como backup
-      saveToStorage(STORAGE_KEY, calificaciones);
-    } else {
+    if (!usarSupabase) {
       saveToStorage(STORAGE_KEY, calificaciones);
     }
   }, [calificaciones]);
 
-  // Sincronizar equipos con Supabase
+  // Sincronizar equipos - Solo localStorage si NO está usando Supabase
   useEffect(() => {
-    if (usarSupabase) {
-      saveToStorage(STORAGE_EQUIPOS_KEY, equipos);
-    } else {
+    if (!usarSupabase) {
       saveToStorage(STORAGE_EQUIPOS_KEY, equipos);
     }
   }, [equipos]);
 
-  // Sincronizar jurados con Supabase
+  // Sincronizar jurados - Solo localStorage si NO está usando Supabase
   useEffect(() => {
-    if (usarSupabase) {
-      saveToStorage(STORAGE_JURADOS_KEY, listaJurados);
-    } else {
+    if (!usarSupabase) {
       saveToStorage(STORAGE_JURADOS_KEY, listaJurados);
     }
   }, [listaJurados]);
