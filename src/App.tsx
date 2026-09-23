@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { jurados as juradosDefault, criterios, categoriasOperativas } from './data';
 import { CalificacionJurado, Jurado } from './types';
+import { isSupabaseConfigured, supabase } from './lib/supabase';
+import * as db from './lib/database';
 
 type Vista = 'inicio' | 'calificar' | 'resultados' | 'contexto';
 
@@ -24,6 +26,15 @@ function saveToStorage<T>(key: string, value: T): void {
   } catch (e) {
     console.error('Error saving to storage:', e);
   }
+}
+
+// Verificar si Supabase está configurado
+const usarSupabase = isSupabaseConfigured();
+
+if (usarSupabase) {
+  console.log('✅ Supabase configurado - usando base de datos en la nube');
+} else {
+  console.log('⚠️ Supabase no configurado - usando localStorage (modo offline)');
 }
 
 function App() {
@@ -58,9 +69,59 @@ function App() {
   const [confirmarBorrado, setConfirmarBorrado] = useState<string | null>(null);
   const [mostrarExportar, setMostrarExportar] = useState(false);
 
-  useEffect(() => { saveToStorage(STORAGE_KEY, calificaciones); }, [calificaciones]);
-  useEffect(() => { saveToStorage(STORAGE_EQUIPOS_KEY, equipos); }, [equipos]);
-  useEffect(() => { saveToStorage(STORAGE_JURADOS_KEY, listaJurados); }, [listaJurados]);
+  // Cargar datos desde Supabase al iniciar
+  useEffect(() => {
+    if (usarSupabase) {
+      const cargarDatos = async () => {
+        try {
+          // Cargar equipos
+          const equiposDb = await db.getAllEquipos();
+          setEquipos(equiposDb.map(db.mapSupabaseEquipo));
+
+          // Cargar jurados
+          const juradosDb = await db.getAllJurados();
+          setListaJurados(juradosDb.map(db.mapSupabaseJurado));
+
+          // Cargar calificaciones
+          const calificacionesDb = await db.getAllCalificaciones();
+          setCalificaciones(calificacionesDb.map(db.mapSupabaseCalificacion));
+
+          console.log('✅ Datos cargados desde Supabase');
+        } catch (error) {
+          console.error('❌ Error cargando datos desde Supabase:', error);
+        }
+      };
+      cargarDatos();
+    }
+  }, []);
+
+  // Sincronizar calificaciones con Supabase
+  useEffect(() => {
+    if (usarSupabase) {
+      // Solo guardar en localStorage como backup
+      saveToStorage(STORAGE_KEY, calificaciones);
+    } else {
+      saveToStorage(STORAGE_KEY, calificaciones);
+    }
+  }, [calificaciones]);
+
+  // Sincronizar equipos con Supabase
+  useEffect(() => {
+    if (usarSupabase) {
+      saveToStorage(STORAGE_EQUIPOS_KEY, equipos);
+    } else {
+      saveToStorage(STORAGE_EQUIPOS_KEY, equipos);
+    }
+  }, [equipos]);
+
+  // Sincronizar jurados con Supabase
+  useEffect(() => {
+    if (usarSupabase) {
+      saveToStorage(STORAGE_JURADOS_KEY, listaJurados);
+    } else {
+      saveToStorage(STORAGE_JURADOS_KEY, listaJurados);
+    }
+  }, [listaJurados]);
 
   const seleccionarJurado = (id: number) => {
     setJuradoActivo(id);
@@ -77,7 +138,7 @@ function App() {
     setPuntuaciones(prev => ({ ...prev, [criterioId]: valor }));
   };
 
-  const guardarCalificacion = () => {
+  const guardarCalificacion = async () => {
     if (!juradoActivo || !equipoSeleccionado) return;
     const todosCalificados = criterios.every(c => puntuaciones[c.id] !== undefined);
     if (!todosCalificados) { alert('Por favor califique todos los criterios antes de guardar.'); return; }
@@ -87,37 +148,81 @@ function App() {
       calificaciones: { ...puntuaciones }, comentarios: comentario, timestamp: new Date(),
     };
 
-    setCalificaciones(prev => {
-      const filtradas = prev.filter(c => !(c.juradoId === juradoActivo && c.equipoId === equipoSeleccionado));
-      return [...filtradas, nuevaCal];
-    });
+    try {
+      if (usarSupabase) {
+        // Guardar en Supabase
+        await db.saveCalificacion({
+          juradoId: juradoActivo,
+          equipoId: equipoSeleccionado,
+          calificaciones: { ...puntuaciones },
+          comentarios: comentario
+        });
+        console.log('✅ Calificación guardada en Supabase');
+      }
 
-    setMensajeExito(`Calificación guardada para ${equipos.find(e => e.id === equipoSeleccionado)?.nombre}`);
-    setTimeout(() => setMensajeExito(''), 3000);
-    setEquipoSeleccionado(null);
-    setPuntuaciones({});
-    setComentario('');
+      // Actualizar estado local
+      setCalificaciones(prev => {
+        const filtradas = prev.filter(c => !(c.juradoId === juradoActivo && c.equipoId === equipoSeleccionado));
+        return [...filtradas, nuevaCal];
+      });
+
+      setMensajeExito(`Calificación guardada para ${equipos.find(e => e.id === equipoSeleccionado)?.nombre}`);
+      setTimeout(() => setMensajeExito(''), 3000);
+      setEquipoSeleccionado(null);
+      setPuntuaciones({});
+      setComentario('');
+    } catch (error) {
+      console.error('❌ Error guardando calificación:', error);
+      alert('Error al guardar la calificación. Por favor intente nuevamente.');
+    }
   };
 
-  const borrarCalificacion = (juradoId: number, equipoId: number) => {
-    setCalificaciones(prev => prev.filter(c => !(c.juradoId === juradoId && c.equipoId === equipoId)));
-    setConfirmarBorrado(null);
-    setMensajeExito('Calificación eliminada');
-    setTimeout(() => setMensajeExito(''), 3000);
+  const borrarCalificacion = async (juradoId: number, equipoId: number) => {
+    try {
+      if (usarSupabase) {
+        await db.deleteCalificacion(juradoId, equipoId);
+        console.log('✅ Calificación eliminada de Supabase');
+      }
+      setCalificaciones(prev => prev.filter(c => !(c.juradoId === juradoId && c.equipoId === equipoId)));
+      setConfirmarBorrado(null);
+      setMensajeExito('Calificación eliminada');
+      setTimeout(() => setMensajeExito(''), 3000);
+    } catch (error) {
+      console.error('❌ Error eliminando calificación:', error);
+      alert('Error al eliminar la calificación');
+    }
   };
 
-  const borrarTodasCalificaciones = () => {
-    setCalificaciones([]);
-    setConfirmarBorrado(null);
-    setMensajeExito('Todas las calificaciones eliminadas. Nueva ronda iniciada.');
-    setTimeout(() => setMensajeExito(''), 4000);
+  const borrarTodasCalificaciones = async () => {
+    try {
+      if (usarSupabase) {
+        await db.deleteAllCalificaciones();
+        console.log('✅ Todas las calificaciones eliminadas de Supabase');
+      }
+      setCalificaciones([]);
+      setConfirmarBorrado(null);
+      setMensajeExito('Todas las calificaciones eliminadas. Nueva ronda iniciada.');
+      setTimeout(() => setMensajeExito(''), 4000);
+    } catch (error) {
+      console.error('❌ Error eliminando calificaciones:', error);
+      alert('Error al eliminar las calificaciones');
+    }
   };
 
-  const borrarCalificacionesJurado = (juradoId: number) => {
-    setCalificaciones(prev => prev.filter(c => c.juradoId !== juradoId));
-    setConfirmarBorrado(null);
-    setMensajeExito(`Calificaciones de ${listaJurados.find(j => j.id === juradoId)?.nombre} eliminadas`);
-    setTimeout(() => setMensajeExito(''), 3000);
+  const borrarCalificacionesJurado = async (juradoId: number) => {
+    try {
+      if (usarSupabase) {
+        await db.deleteCalificacionesByJurado(juradoId);
+        console.log('✅ Calificaciones del jurado eliminadas de Supabase');
+      }
+      setCalificaciones(prev => prev.filter(c => c.juradoId !== juradoId));
+      setConfirmarBorrado(null);
+      setMensajeExito(`Calificaciones de ${listaJurados.find(j => j.id === juradoId)?.nombre} eliminadas`);
+      setTimeout(() => setMensajeExito(''), 3000);
+    } catch (error) {
+      console.error('❌ Error eliminando calificaciones del jurado:', error);
+      alert('Error al eliminar las calificaciones');
+    }
   };
 
   const exportarResultados = () => {
@@ -179,13 +284,91 @@ function App() {
     if (cal) { setPuntuaciones({ ...cal.calificaciones }); setComentario(cal.comentarios); }
   }, [calificaciones]);
 
-  const actualizarNombreEquipo = (id: number, nombre: string) => setEquipos(prev => prev.map(e => e.id === id ? { ...e, nombre } : e));
-  const agregarEquipo = () => { const nuevoId = Math.max(...equipos.map(e => e.id), 0) + 1; setEquipos(prev => [...prev, { id: nuevoId, nombre: `Equipo ${nuevoId}` }]); };
-  const eliminarEquipo = (id: number) => { if (equipos.length <= 1) return; setEquipos(prev => prev.filter(e => e.id !== id)); setCalificaciones(prev => prev.filter(c => c.equipoId !== id)); };
-  const actualizarNombreJurado = (id: number, nombre: string) => setListaJurados(prev => prev.map(j => j.id === id ? { ...j, nombre } : j));
-  const actualizarCargoJurado = (id: number, cargo: string) => setListaJurados(prev => prev.map(j => j.id === id ? { ...j, cargo } : j));
-  const actualizarAvatarJurado = (id: number, avatar: string) => setListaJurados(prev => prev.map(j => j.id === id ? { ...j, avatar } : j));
-  const resetearJurados = () => { setListaJurados(juradosDefault); setMensajeExito('Jurados restaurados'); setTimeout(() => setMensajeExito(''), 3000); };
+  const actualizarNombreEquipo = async (id: number, nombre: string) => {
+    try {
+      if (usarSupabase) {
+        await db.updateEquipo(id, nombre);
+        console.log('✅ Equipo actualizado en Supabase');
+      }
+      setEquipos(prev => prev.map(e => e.id === id ? { ...e, nombre } : e));
+    } catch (error) {
+      console.error('❌ Error actualizando equipo:', error);
+    }
+  };
+
+  const agregarEquipo = async () => {
+    try {
+      if (usarSupabase) {
+        const nuevoEquipo = await db.createEquipo(`Equipo ${equipos.length + 1}`);
+        setEquipos(prev => [...prev, { id: nuevoEquipo.id, nombre: nuevoEquipo.nombre }]);
+        console.log('✅ Equipo agregado en Supabase');
+      } else {
+        const nuevoId = Math.max(...equipos.map(e => e.id), 0) + 1;
+        setEquipos(prev => [...prev, { id: nuevoId, nombre: `Equipo ${nuevoId}` }]);
+      }
+    } catch (error) {
+      console.error('❌ Error agregando equipo:', error);
+      // Fallback a localStorage
+      const nuevoId = Math.max(...equipos.map(e => e.id), 0) + 1;
+      setEquipos(prev => [...prev, { id: nuevoId, nombre: `Equipo ${nuevoId}` }]);
+    }
+  };
+
+  const eliminarEquipo = async (id: number) => {
+    if (equipos.length <= 1) return;
+    try {
+      if (usarSupabase) {
+        await db.deleteEquipo(id);
+        console.log('✅ Equipo eliminado de Supabase');
+      }
+      setEquipos(prev => prev.filter(e => e.id !== id));
+      setCalificaciones(prev => prev.filter(c => c.equipoId !== id));
+    } catch (error) {
+      console.error('❌ Error eliminando equipo:', error);
+    }
+  };
+
+  const actualizarNombreJurado = async (id: number, nombre: string) => {
+    try {
+      if (usarSupabase) {
+        await db.updateJurado(id, { nombre });
+        console.log('✅ Jurado actualizado en Supabase');
+      }
+      setListaJurados(prev => prev.map(j => j.id === id ? { ...j, nombre } : j));
+    } catch (error) {
+      console.error('❌ Error actualizando jurado:', error);
+    }
+  };
+
+  const actualizarCargoJurado = async (id: number, cargo: string) => {
+    try {
+      if (usarSupabase) {
+        await db.updateJurado(id, { cargo });
+        console.log('✅ Cargo del jurado actualizado en Supabase');
+      }
+      setListaJurados(prev => prev.map(j => j.id === id ? { ...j, cargo } : j));
+    } catch (error) {
+      console.error('❌ Error actualizando cargo del jurado:', error);
+    }
+  };
+
+  const actualizarAvatarJurado = async (id: number, avatar: string) => {
+    try {
+      if (usarSupabase) {
+        await db.updateJurado(id, { avatar });
+        console.log('✅ Avatar del jurado actualizado en Supabase');
+      }
+      setListaJurados(prev => prev.map(j => j.id === id ? { ...j, avatar } : j));
+    } catch (error) {
+      console.error('❌ Error actualizando avatar del jurado:', error);
+    }
+  };
+
+  const resetearJurados = () => {
+    setListaJurados(juradosDefault);
+    setMensajeExito('Jurados restaurados (solo localmente)');
+    setTimeout(() => setMensajeExito(''), 3000);
+  };
 
   // ============ RENDER ============
 
@@ -204,6 +387,15 @@ function App() {
           <div className="hidden sm:block">
             <h1 className="text-sm font-bold text-white tracking-tight">Bootcamp Digital Factory</h1>
             <p className="text-[10px] text-[#6b7c93] uppercase tracking-wider">IA & Transformación 4.0</p>
+          </div>
+          {/* Indicador de modo */}
+          <div className={`hidden md:flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-semibold ${
+            usarSupabase 
+              ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+              : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+          }`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${usarSupabase ? 'bg-green-400' : 'bg-yellow-400'} animate-pulse`} />
+            {usarSupabase ? 'Supabase' : 'Local'}
           </div>
         </div>
         <nav className="flex gap-1">
