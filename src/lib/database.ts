@@ -18,13 +18,18 @@ const checkSupabase = () => {
 
 export const getAllEquipos = async () => {
   checkSupabase();
+  console.log('🔍 Consultando equipos desde Supabase...');
   const { data, error } = await supabase!
     .from('equipos')
     .select('*')
     .order('id', { ascending: true });
   
-  if (error) throw error;
-  return data;
+  if (error) {
+    console.error('❌ Error consultando equipos:', error);
+    throw error;
+  }
+  console.log('✅ Equipos obtenidos:', data?.length || 0);
+  return data || [];
 };
 
 export const createEquipo = async (nombre: string) => {
@@ -68,17 +73,23 @@ export const deleteEquipo = async (id: number) => {
 
 export const getAllJurados = async () => {
   checkSupabase();
+  console.log('🔍 Consultando jurados desde Supabase...');
   const { data, error } = await supabase!
     .from('jurados')
     .select('*')
     .order('id', { ascending: true });
   
-  if (error) throw error;
-  return data;
+  if (error) {
+    console.error('❌ Error consultando jurados:', error);
+    throw error;
+  }
+  console.log('✅ Jurados obtenidos:', data?.length || 0);
+  return data || [];
 };
 
 export const updateJurado = async (id: number, updates: Partial<Jurado>) => {
   checkSupabase();
+  console.log('💾 Actualizando jurado en Supabase:', { id, updates });
   const { data, error } = await supabase!
     .from('jurados')
     .update(updates)
@@ -86,7 +97,11 @@ export const updateJurado = async (id: number, updates: Partial<Jurado>) => {
     .select()
     .single();
   
-  if (error) throw error;
+  if (error) {
+    console.error('❌ Error actualizando jurado:', error);
+    throw error;
+  }
+  console.log('✅ Jurado actualizado exitosamente');
   return data;
 };
 
@@ -96,13 +111,18 @@ export const updateJurado = async (id: number, updates: Partial<Jurado>) => {
 
 export const getAllCalificaciones = async () => {
   checkSupabase();
+  console.log('🔍 Consultando calificaciones desde Supabase...');
   const { data, error } = await supabase!
     .from('calificaciones')
     .select('*')
     .order('created_at', { ascending: false });
   
-  if (error) throw error;
-  return data;
+  if (error) {
+    console.error('❌ Error consultando calificaciones:', error);
+    throw error;
+  }
+  console.log('✅ Calificaciones obtenidas:', data?.length || 0);
+  return data || [];
 };
 
 export const getCalificacionesByJurado = async (juradoId: number) => {
@@ -143,10 +163,17 @@ export const getCalificacion = async (juradoId: number, equipoId: number) => {
 export const saveCalificacion = async (calificacion: Omit<CalificacionJurado, 'timestamp'>) => {
   checkSupabase();
   
+  console.log('💾 Guardando calificación en Supabase:', {
+    juradoId: calificacion.juradoId,
+    equipoId: calificacion.equipoId,
+    calificaciones: calificacion.calificaciones
+  });
+  
   // Verificar si ya existe
   const existing = await getCalificacion(calificacion.juradoId, calificacion.equipoId);
   
   if (existing) {
+    console.log('🔄 Actualizando calificación existente ID:', existing.id);
     // Actualizar
     const { data, error } = await supabase!
       .from('calificaciones')
@@ -159,9 +186,14 @@ export const saveCalificacion = async (calificacion: Omit<CalificacionJurado, 't
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error actualizando calificación:', error);
+      throw error;
+    }
+    console.log('✅ Calificación actualizada exitosamente');
     return data;
   } else {
+    console.log('➕ Insertando nueva calificación');
     // Insertar
     const { data, error } = await supabase!
       .from('calificaciones')
@@ -174,7 +206,11 @@ export const saveCalificacion = async (calificacion: Omit<CalificacionJurado, 't
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error insertando calificación:', error);
+      throw error;
+    }
+    console.log('✅ Calificación insertada exitosamente');
     return data;
   }
 };
