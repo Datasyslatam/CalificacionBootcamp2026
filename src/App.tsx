@@ -41,11 +41,15 @@ function App() {
   const [vista, setVista] = useState<Vista>('inicio');
   const [juradoActivo, setJuradoActivo] = useState<number | null>(null);
   const [equipoSeleccionado, setEquipoSeleccionado] = useState<number | null>(null);
+  
+  // Estados iniciales: Si Supabase está configurado, empezar vacío (se cargará desde la nube)
+  // Si no está configurado, usar localStorage como fallback
   const [calificaciones, setCalificaciones] = useState<CalificacionJurado[]>(() =>
-    loadFromStorage<CalificacionJurado[]>(STORAGE_KEY, [])
+    usarSupabase ? [] : loadFromStorage<CalificacionJurado[]>(STORAGE_KEY, [])
   );
+  
   const [equipos, setEquipos] = useState<{ id: number; nombre: string }[]>(() =>
-    loadFromStorage<{ id: number; nombre: string }[]>(STORAGE_EQUIPOS_KEY, [
+    usarSupabase ? [] : loadFromStorage<{ id: number; nombre: string }[]>(STORAGE_EQUIPOS_KEY, [
       { id: 1, nombre: 'Equipo 1' },
       { id: 2, nombre: 'Equipo 2' },
       { id: 3, nombre: 'Equipo 3' },
@@ -58,8 +62,9 @@ function App() {
       { id: 10, nombre: 'Equipo 10' },
     ])
   );
+  
   const [listaJurados, setListaJurados] = useState<Jurado[]>(() =>
-    loadFromStorage<Jurado[]>(STORAGE_JURADOS_KEY, juradosDefault)
+    usarSupabase ? [] : loadFromStorage<Jurado[]>(STORAGE_JURADOS_KEY, juradosDefault)
   );
   const [editandoEquipos, setEditandoEquipos] = useState(false);
   const [editandoJurados, setEditandoJurados] = useState(false);
@@ -68,12 +73,14 @@ function App() {
   const [mensajeExito, setMensajeExito] = useState('');
   const [confirmarBorrado, setConfirmarBorrado] = useState<string | null>(null);
   const [mostrarExportar, setMostrarExportar] = useState(false);
+  const [cargandoDatos, setCargandoDatos] = useState(usarSupabase); // Solo mostrar loading si usa Supabase
 
   // Cargar datos desde Supabase al iniciar
   useEffect(() => {
     if (usarSupabase) {
       const cargarDatos = async () => {
         try {
+          setCargandoDatos(true);
           console.log('🔄 Cargando datos desde Supabase...');
           
           // Cargar equipos
@@ -98,11 +105,15 @@ function App() {
         } catch (error) {
           console.error('❌ Error cargando datos desde Supabase:', error);
           console.error('Detalles del error:', error);
+          alert('Error al cargar datos desde Supabase. Verifica la conexión y la configuración.');
+        } finally {
+          setCargandoDatos(false);
         }
       };
       cargarDatos();
     } else {
       console.log('⚠️ Supabase no configurado, usando localStorage');
+      setCargandoDatos(false);
     }
   }, []);
 
@@ -1216,6 +1227,18 @@ function App() {
       <div className="bg-diagonal-stripes" />
       
       {renderHeader()}
+      
+      {/* Indicador de carga */}
+      {cargandoDatos && (
+        <div className="fixed inset-0 bg-[#061224]/90 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B1A] border-t-transparent mb-4"></div>
+            <p className="text-white text-lg font-semibold">Cargando datos desde Supabase...</p>
+            <p className="text-[#6b7c93] text-sm mt-2">Sincronizando información en la nube</p>
+          </div>
+        </div>
+      )}
+      
       <main className="relative z-10">
         {vista === 'inicio' && renderInicio()}
         {vista === 'contexto' && renderContexto()}
