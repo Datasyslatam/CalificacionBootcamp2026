@@ -476,7 +476,11 @@ function App() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-2xl font-bold text-white">Panel de Jurados</h3>
-                <p className="text-sm text-[#6b7c93] mt-1">Seleccione su perfil para calificar</p>
+                <p className="text-sm text-[#6b7c93] mt-1">
+                  {usarSupabase 
+                    ? 'Los nombres y datos se sincronizan en Supabase'
+                    : 'Seleccione su perfil para calificar'}
+                </p>
               </div>
               <div className="flex gap-2">
                 <button
@@ -505,18 +509,26 @@ function App() {
                     >
                       {editandoJurados ? (
                         <div className="space-y-2">
-                          <select
-                            value={j.avatar}
-                            onChange={(e) => actualizarAvatarJurado(j.id, e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-2xl bg-transparent border-none p-0 cursor-pointer"
-                          >
-                            {['👤','👩','👨','👩‍💼','👨‍💼','👩‍🔬','👨‍🔬','🧑‍💻','👩‍🏫','👨‍🏫'].map(a => <option key={a} value={a}>{a}</option>)}
-                          </select>
+                          <div className="flex items-center justify-between">
+                            <select
+                              value={j.avatar}
+                              onChange={(e) => actualizarAvatarJurado(j.id, e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-2xl bg-transparent border-none p-0 cursor-pointer"
+                            >
+                              {['👤','👩','👨','👩‍💼','👨‍💼','👩‍🔬','👨‍🔬','🧑‍💻','👩‍🏫','👨‍🏫'].map(a => <option key={a} value={a}>{a}</option>)}
+                            </select>
+                            {usarSupabase && (
+                              <span className="text-[9px] text-green-400 font-semibold">☁️ Sync</span>
+                            )}
+                          </div>
                           <input type="text" value={j.nombre} onChange={(e) => actualizarNombreJurado(j.id, e.target.value)}
-                            onClick={(e) => e.stopPropagation()} className="input-dark text-sm font-bold" placeholder="Nombre" />
+                            onClick={(e) => e.stopPropagation()} className="input-dark text-sm font-bold" placeholder="Nombre del jurado" />
                           <input type="text" value={j.cargo} onChange={(e) => actualizarCargoJurado(j.id, e.target.value)}
-                            onClick={(e) => e.stopPropagation()} className="input-dark text-xs" placeholder="Cargo" />
+                            onClick={(e) => e.stopPropagation()} className="input-dark text-xs" placeholder="Cargo o rol" />
+                          {usarSupabase && (
+                            <p className="text-[9px] text-green-400/70">✓ Guardado automáticamente en Supabase</p>
+                          )}
                         </div>
                       ) : (
                         <>
@@ -539,11 +551,27 @@ function App() {
           </div>
 
           {/* Info storage */}
-          <div className="card-dark p-4 flex items-center gap-3 border-[#00B4D8]/30">
-            <div className="w-8 h-8 rounded-lg bg-[#00B4D8]/15 flex items-center justify-center text-[#00B4D8] text-sm">💾</div>
-            <div>
-              <p className="text-xs font-semibold text-white">Datos almacenados localmente</p>
-              <p className="text-[10px] text-[#6b7c93]">Las calificaciones persisten en su navegador. Exporte resultados cuando lo necesite.</p>
+          <div className={`card-dark p-4 flex items-center gap-3 ${usarSupabase ? 'border-green-500/30' : 'border-[#00B4D8]/30'}`}>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${usarSupabase ? 'bg-green-500/15 text-green-400' : 'bg-[#00B4D8]/15 text-[#00B4D8]'}`}>
+              {usarSupabase ? '☁️' : '💾'}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-semibold text-white">
+                  {usarSupabase ? 'Datos almacenados en Supabase' : 'Datos almacenados localmente'}
+                </p>
+                {usarSupabase && (
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                    Sincronizado
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-[#6b7c93]">
+                {usarSupabase 
+                  ? 'Los nombres de jurados, equipos y calificaciones se sincronizan en tiempo real en la nube.'
+                  : 'Las calificaciones persisten en su navegador. Configure Supabase para sincronización en la nube.'}
+              </p>
             </div>
           </div>
         </div>
@@ -1000,11 +1028,105 @@ function App() {
               </div>
             </div>
 
+            {/* Matriz de Calificaciones por Jurado y Equipo */}
+            <div className="card-dark p-6 mb-8 border-[#00B4D8]/20">
+              <h3 className="text-sm font-bold text-[#00B4D8] uppercase tracking-wider mb-4">📊 Matriz de Calificaciones</h3>
+              <p className="text-xs text-[#6b7c93] mb-4">Vista detallada de qué jurado ha calificado a cada equipo</p>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-[#00B4D8]/10">
+                      <th className="text-left p-2 text-[#6b7c93] font-semibold sticky left-0 bg-[#0A192F]">Jurado / Equipo</th>
+                      {equipos.map(eq => (
+                        <th key={eq.id} className="text-center p-2 text-[#6b7c93] font-semibold min-w-[80px]">
+                          <div className="truncate">{eq.nombre}</div>
+                        </th>
+                      ))}
+                      <th className="text-center p-2 text-[#6b7c93] font-semibold">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {listaJurados.map(j => {
+                      const calsJurado = calificaciones.filter(c => c.juradoId === j.id);
+                      return (
+                        <tr key={j.id} className="border-b border-[#00B4D8]/5 hover:bg-[#00B4D8]/5">
+                          <td className="p-2 sticky left-0 bg-[#0A192F]">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{j.avatar}</span>
+                              <div>
+                                <p className="font-bold text-white text-xs">{j.nombre}</p>
+                                <p className="text-[10px] text-[#6b7c93]">{calsJurado.length}/{equipos.length}</p>
+                              </div>
+                            </div>
+                          </td>
+                          {equipos.map(eq => {
+                            const cal = calificaciones.find(c => c.juradoId === j.id && c.equipoId === eq.id);
+                            const puntaje = cal ? criterios.reduce((acc, c) => acc + (cal.calificaciones[c.id] || 0) * (c.ponderacion / 100), 0) : null;
+                            return (
+                              <td key={eq.id} className="p-2 text-center">
+                                {cal ? (
+                                  <span className="score-badge score-high text-[10px]">
+                                    {puntaje!.toFixed(1)}
+                                  </span>
+                                ) : (
+                                  <span className="text-[#6b7c93] text-[10px]">—</span>
+                                )}
+                              </td>
+                            );
+                          })}
+                          <td className="p-2 text-center">
+                            <span className="score-badge score-high text-[10px] font-bold">
+                              {calsJurado.length}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {/* Fila de totales por equipo */}
+                    <tr className="border-t-2 border-[#00B4D8]/20 bg-[#00B4D8]/5">
+                      <td className="p-2 sticky left-0 bg-[#0A192F]">
+                        <p className="font-bold text-[#00B4D8] text-xs">Total por Equipo</p>
+                      </td>
+                      {equipos.map(eq => {
+                        const totalCals = calificaciones.filter(c => c.equipoId === eq.id).length;
+                        return (
+                          <td key={eq.id} className="p-2 text-center">
+                            <span className="score-badge score-mid text-[10px] font-bold">
+                              {totalCals}/{listaJurados.length}
+                            </span>
+                          </td>
+                        );
+                      })}
+                      <td className="p-2 text-center">
+                        <span className="score-badge score-high text-[10px] font-bold">
+                          {calificaciones.length}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Leyenda */}
+              <div className="mt-4 flex items-center gap-4 text-[10px] text-[#6b7c93]">
+                <div className="flex items-center gap-1">
+                  <span className="score-badge score-high text-[9px]">8.5</span>
+                  <span>Calificado</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[#6b7c93]">—</span>
+                  <span>Pendiente</span>
+                </div>
+              </div>
+            </div>
+
             {/* Detalle por jurado */}
             <h3 className="text-sm font-bold text-[#00B4D8] uppercase tracking-wider mb-4">Detalle por Jurado</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {listaJurados.map(j => {
                 const calsJurado = calificaciones.filter(c => c.juradoId === j.id);
+                const progreso = Math.round((calsJurado.length / equipos.length) * 100);
                 return (
                   <div key={j.id} className="card-dark p-4">
                     <div className="flex items-center justify-between mb-3">
@@ -1012,13 +1134,26 @@ function App() {
                         <span className="text-xl">{j.avatar}</span>
                         <div>
                           <p className="font-bold text-white text-sm">{j.nombre}</p>
-                          <p className="text-[10px] text-[#6b7c93]">{calsJurado.length} calificado(s)</p>
+                          <p className="text-[10px] text-[#6b7c93]">{j.cargo}</p>
                         </div>
                       </div>
                       {calsJurado.length > 0 && (
                         <button onClick={() => setConfirmarBorrado(`jurado-${j.id}`)} className="text-[10px] text-red-400 hover:text-red-300 bg-red-500/10 px-2 py-1 rounded cursor-pointer">🗑️</button>
                       )}
                     </div>
+                    
+                    {/* Barra de progreso */}
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] text-[#6b7c93]">Progreso</span>
+                        <span className="text-[10px] font-mono text-[#FF6B1A]">{progreso}%</span>
+                      </div>
+                      <div className="progress-lime h-1.5">
+                        <div className="progress-lime-fill" style={{ width: `${progreso}%` }} />
+                      </div>
+                      <p className="text-[10px] text-[#6b7c93] mt-1">{calsJurado.length} de {equipos.length} equipos</p>
+                    </div>
+
                     {calsJurado.length > 0 ? (
                       <div className="space-y-1.5">
                         {calsJurado.map(cal => {
@@ -1036,7 +1171,7 @@ function App() {
                         })}
                       </div>
                     ) : (
-                      <p className="text-xs text-[#6b7c93] italic">Sin calificaciones</p>
+                      <p className="text-xs text-[#6b7c93] italic">Sin calificaciones aún</p>
                     )}
                   </div>
                 );
